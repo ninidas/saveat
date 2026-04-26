@@ -1,0 +1,27 @@
+networks:
+  ninet:
+    external: true
+    name: ninet
+
+services:
+  saveat:
+    image: saveat:latest
+    container_name: saveat
+    restart: unless-stopped
+    labels:
+      - swag=enable
+      - swag_url=saveat.*
+      - swag_port=8000
+      - swag_proto=http
+      - com.centurylinklabs.watchtower.enable=true
+      - flame.type=app
+      - flame.name=Saveat
+      - flame.url=saveat.example.com
+      - flame.icon=shopping-cart
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /path/to/saveat/data:/data
+    networks:
+      - ninet

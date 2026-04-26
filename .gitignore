@@ -1,0 +1,53 @@
+# Environnement
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Base de données
+*.db
+*.sqlite
+
+# Clés privées
+backend/secrets/
+*.pem
+*.pem.txt
+
+# Node / frontend
+node_modules/
+dist/
+build/
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local scripts
+deploy.sh
+redeploy-vscode.sh
+backup.sh
+backups/
+docker-compose.dev.yml
+docker-compose.yml
+
+# Données
+data/
+data-dev/
+
+# Claude Code memory
+memory/
+
+# Images à la racine
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+/*.webp

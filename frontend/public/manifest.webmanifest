@@ -1,0 +1,15 @@
+{
+  "name": "Saveat",
+  "short_name": "Saveat",
+  "description": "Comparez les prix alimentaires entre enseignes",
+  "theme_color": "#059669",
+  "background_color": "#f1f5f9",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "scope": "/",
+  "id": "/",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
