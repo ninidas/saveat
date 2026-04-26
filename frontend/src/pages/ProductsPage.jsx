@@ -161,7 +161,7 @@ function ProductSheet({ product, stores, onClose, onSaved, onDeleted }) {
               value={form.category}
               onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
             >
-              <option value="">— aucune —</option>
+              <option value="">aucune</option>
               {Object.keys(CATEGORY_ICONS).map(c => (
                 <option key={c} value={c}>{CATEGORY_ICONS[c]} {c}</option>
               ))}

@@ -43,7 +43,7 @@ export default function SetupPage() {
 
         <div className="bg-white rounded-3xl shadow-2xl p-6">
           <h2 className="text-lg font-semibold text-slate-800 mb-1">Créer votre compte</h2>
-          <p className="text-sm text-slate-500 mb-5">Premier démarrage — configurez votre accès.</p>
+          <p className="text-sm text-slate-500 mb-5">Premier démarrage - configurez votre accès.</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

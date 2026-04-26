@@ -66,7 +66,7 @@ export default function Layout({ children }) {
   return (
     <div className="lg:flex lg:min-h-screen">
 
-      {/* ── Sidebar desktop ───────────────────────────────── */}
+      {/* Sidebar desktop ───────────────────────────────── */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-gradient-to-b from-emerald-600 to-teal-700 shadow-xl">
         <div className="pt-8 pb-4 px-4 border-b border-white/10 flex flex-col items-center">
           <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl mb-3">🛒</div>
@@ -114,12 +114,12 @@ export default function Layout({ children }) {
         </div>
       </aside>
 
-      {/* ── Content ───────────────────────────────────────── */}
+      {/* Content ───────────────────────────────────────── */}
       <main className="lg:ml-64 lg:flex-1 min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 lg:pb-0">
         {children}
       </main>
 
-      {/* ── Bottom nav mobile ─────────────────────────────── */}
+      {/* Bottom nav mobile ─────────────────────────────── */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex z-50">
         {NAV.map(({ to, label, icon, badge, exact }) => {
           const active = isActive({ to, exact })

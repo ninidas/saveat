@@ -12,6 +12,27 @@ export default function SettingsPage() {
   const [error, setError]       = useState('')
   const navigate                = useNavigate()
 
+  const [pwCurrent, setPwCurrent] = useState('')
+  const [pwNew, setPwNew]         = useState('')
+  const [pwConfirm, setPwConfirm] = useState('')
+  const [pwSaving, setPwSaving]   = useState(false)
+  const [pwSaved, setPwSaved]     = useState(false)
+  const [pwError, setPwError]     = useState('')
+
+  async function changePassword(e) {
+    e.preventDefault()
+    setPwError('')
+    if (pwNew !== pwConfirm) { setPwError('Les mots de passe ne correspondent pas') ; return }
+    if (pwNew.length < 6)    { setPwError('Minimum 6 caractères') ; return }
+    setPwSaving(true)
+    try {
+      await api.changePassword(pwCurrent, pwNew)
+      setPwCurrent(''); setPwNew(''); setPwConfirm(''); setPwSaved(true)
+      setTimeout(() => setPwSaved(false), 2500)
+    } catch (err) { setPwError(err.message) }
+    finally { setPwSaving(false) }
+  }
+
   useEffect(() => {
     api.getSettings().then(s => setSettings(s)).catch(e => console.error(e))
   }, [])
@@ -53,6 +74,45 @@ export default function SettingsPage() {
             </div>
             <p className="font-medium text-slate-900 dark:text-white">{user?.username}</p>
           </div>
+        </div>
+
+        {/* Change password */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4">
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">Changer le mot de passe</p>
+          <form onSubmit={changePassword} className="space-y-2">
+            <input
+              type="password"
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="Mot de passe actuel"
+              value={pwCurrent}
+              onChange={e => setPwCurrent(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="Nouveau mot de passe"
+              value={pwNew}
+              onChange={e => setPwNew(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="Confirmer le nouveau mot de passe"
+              value={pwConfirm}
+              onChange={e => setPwConfirm(e.target.value)}
+              required
+            />
+            {pwError && <p className="text-xs text-red-500">{pwError}</p>}
+            <button
+              type="submit"
+              disabled={pwSaving || !pwCurrent || !pwNew || !pwConfirm}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-4 py-2 text-sm font-medium transition disabled:opacity-50"
+            >
+              {pwSaved ? 'Mot de passe modifié ✓' : pwSaving ? '…' : 'Modifier le mot de passe'}
+            </button>
+          </form>
         </div>
 
         {/* Dark mode */}

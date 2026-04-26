@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import BottomSheet from '../components/BottomSheet'
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
+// Helpers
 
 const STOP_WORDS = new Set([
   'bio', 'super', 'ultra', 'extra', 'original', 'classic',
@@ -53,7 +53,7 @@ function formatDate(iso) {
   return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })
 }
 
-// ── ReceiptAnalyzer sheet ──────────────────────────────────────────────────────
+// ReceiptAnalyzer sheet
 
 function ReceiptAnalyzer({ onClose, onImported }) {
   const [file, setFile]           = useState(null)
@@ -225,7 +225,7 @@ function ReceiptAnalyzer({ onClose, onImported }) {
                 className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 value={selectedStoreId} onChange={e => setSelectedStoreId(e.target.value)}
               >
-                <option value="">— Sélectionner une enseigne —</option>
+                <option value="">Sélectionner une enseigne</option>
                 {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
@@ -312,7 +312,7 @@ function ReceiptAnalyzer({ onClose, onImported }) {
   )
 }
 
-// ── Main page ──────────────────────────────────────────────────────────────────
+// Main page
 
 export default function ImportPage() {
   const [sessions, setSessions]         = useState([])

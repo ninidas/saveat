@@ -61,7 +61,7 @@ def get_config(
     }
 
 
-# ── Frontend SPA ──────────────────────────────────────────────────────────────
+# Frontend SPA
 _FRONTEND_DIST = Path(__file__).parent.parent / "frontend_dist"
 
 if (_FRONTEND_DIST / "assets").exists():

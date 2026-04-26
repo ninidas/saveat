@@ -66,7 +66,8 @@ export const api = {
   setupStatus:  ()      => request('/setup/status'),
   setup:        (data)  => request('/setup', { method: 'POST', body: JSON.stringify(data) }),
   login:        (u, p)  => request('/auth/login', { method: 'POST', body: JSON.stringify({ username: u, password: p }) }),
-  register:     (u, p)  => request('/users/register', { method: 'POST', body: JSON.stringify({ username: u, password: p }) }),
+  changePassword: (current_password, new_password) =>
+                    request('/auth/change-password', { method: 'POST', body: JSON.stringify({ current_password, new_password }) }),
   deleteAccount:(pwd)   => request('/users/me', { method: 'DELETE', body: JSON.stringify({ password: pwd }) }),
 
   // Stores

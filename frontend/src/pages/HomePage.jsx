@@ -91,6 +91,29 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Hausses de prix */}
+          {stats.price_increases?.length > 0 && (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-red-200 dark:border-red-900/50 overflow-hidden">
+              <div className="px-4 pt-3 pb-1">
+                <p className="text-xs font-semibold text-red-500 dark:text-red-400 uppercase tracking-wide">
+                  Hausses de prix récentes
+                </p>
+              </div>
+              {stats.price_increases.slice(0, 5).map((r, i) => (
+                <div key={i} className="flex items-center gap-3 px-4 py-2.5 border-t border-red-50 dark:border-red-900/30">
+                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: r.store_color }} />
+                  <span className="flex-1 text-sm text-slate-700 dark:text-slate-300 truncate">{r.product_name}</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500 flex-shrink-0 hidden sm:block">{r.store_name}</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500 line-through flex-shrink-0">{r.old_price.toFixed(2)} €</span>
+                  <span className="font-semibold text-sm text-red-600 dark:text-red-400 flex-shrink-0">{r.new_price.toFixed(2)} €</span>
+                  <span className="text-xs font-medium text-red-500 flex-shrink-0">
+                    +{(r.new_price - r.old_price).toFixed(2)} €
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Comparaison en cours */}
           {comparison.length > 0 && (
             <div

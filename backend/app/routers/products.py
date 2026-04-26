@@ -1,4 +1,5 @@
 from datetime import datetime
+from itertools import groupby
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -29,6 +30,36 @@ def get_stats(
         .limit(10)
         .all()
     )
+
+    # Price increases: compare latest 2 entries per (product, store)
+    all_history = (
+        db.query(models.PriceHistory, models.Product, models.Store)
+        .join(models.Product, models.PriceHistory.product_id == models.Product.id)
+        .join(models.Store,   models.PriceHistory.store_id   == models.Store.id)
+        .order_by(
+            models.PriceHistory.product_id,
+            models.PriceHistory.store_id,
+            models.PriceHistory.recorded_at.desc(),
+        )
+        .all()
+    )
+    increases = []
+    for _key, group in groupby(all_history, key=lambda x: (x[0].product_id, x[0].store_id)):
+        entries = list(group)
+        if len(entries) >= 2:
+            hist_new, product, store = entries[0]
+            hist_old, _,       _     = entries[1]
+            if hist_new.price > hist_old.price:
+                increases.append({
+                    "product_name": product.name,
+                    "store_name":   store.name,
+                    "store_color":  store.color,
+                    "old_price":    hist_old.price,
+                    "new_price":    hist_new.price,
+                    "recorded_at":  hist_new.recorded_at.isoformat(),
+                })
+    increases.sort(key=lambda x: x["recorded_at"], reverse=True)
+
     return {
         "total_products": total_products,
         "total_stores": total_stores,
@@ -43,6 +74,7 @@ def get_stats(
             }
             for hist, product, store in recent
         ],
+        "price_increases": increases,
     }
 
 
@@ -164,7 +196,7 @@ def delete_product(
     db.commit()
 
 
-# ── Prices ────────────────────────────────────────────────────────────────────
+# Prices
 
 @router.put("/{product_id}/prices/{store_id}", response_model=schemas.ProductPriceResponse)
 def upsert_price(

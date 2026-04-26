@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { api } from '../api'
 import { useCompare } from '../context/CompareContext'
 
-// ── Comparison calc ────────────────────────────────────────────────────────────
+// Comparison calc
 function computeComparison(selection, stores) {
   if (!selection.length || !stores.length) return []
 
@@ -28,7 +28,7 @@ function computeComparison(selection, stores) {
 
 function round2(n) { return Math.round(n * 100) / 100 }
 
-// ── Comparison panel ──────────────────────────────────────────────────────────
+// Comparison panel
 function ComparisonPanel({ selection, stores, onQtyChange, onRemove }) {
   const rows     = computeComparison(selection, stores)
   const cheapest = rows.find(r => r.missing < selection.length)
@@ -129,7 +129,7 @@ function ComparisonPanel({ selection, stores, onQtyChange, onRemove }) {
   )
 }
 
-// ── Main page ──────────────────────────────────────────────────────────────────
+// Main page
 export default function ComparePage() {
   const [products, setProducts] = useState([])
   const [stores, setStores]     = useState([])

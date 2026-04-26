@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-# ── Auth ──────────────────────────────────────────────────────────────────────
+# Auth
 
 class LoginRequest(BaseModel):
     username: str
@@ -22,6 +22,11 @@ class TokenResponse(BaseModel):
     username: str
 
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
 class SetupStatus(BaseModel):
     needed: bool
 
@@ -31,7 +36,7 @@ class SetupRequest(BaseModel):
     password: str
 
 
-# ── Stores ────────────────────────────────────────────────────────────────────
+# Stores
 
 class StoreCreate(BaseModel):
     name: str
@@ -55,7 +60,7 @@ class StoreResponse(BaseModel):
         from_attributes = True
 
 
-# ── Products ──────────────────────────────────────────────────────────────────
+# Products
 
 class ProductPriceCreate(BaseModel):
     store_id: int
@@ -115,7 +120,7 @@ class ProductResponse(BaseModel):
         from_attributes = True
 
 
-# ── Comparison ────────────────────────────────────────────────────────────────
+# Comparison
 
 class StoreTotal(BaseModel):
     store_id: int
@@ -131,7 +136,7 @@ class ComparisonResult(BaseModel):
     cheapest_store_id: Optional[int] = None
 
 
-# ── Import sessions ───────────────────────────────────────────────────────────
+# Import sessions
 
 class ImportSessionCreate(BaseModel):
     store_id:     int
@@ -153,7 +158,7 @@ class ImportSessionResponse(BaseModel):
         from_attributes = True
 
 
-# ── Settings ──────────────────────────────────────────────────────────────────
+# Settings
 
 class SettingsUpdate(BaseModel):
     claude_api_key: Optional[str] = None
