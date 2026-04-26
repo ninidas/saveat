@@ -42,8 +42,7 @@ docker-compose.yml
 data/
 data-dev/
 
-# Claude Code
-.claude/
+# Claude Code memory
 memory/
 
 # Images à la racine
