@@ -217,6 +217,38 @@ def update_product(
     return _build_product_response(product, db)
 
 
+@router.post("/{product_id}/merge", response_model=schemas.ProductResponse)
+def merge_product(
+    product_id: int,
+    body: schemas.MergeRequest,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(get_current_user),
+):
+    dest   = db.query(models.Product).filter_by(id=product_id).first()
+    source = db.query(models.Product).filter_by(id=body.source_id).first()
+    if not dest or not source:
+        raise HTTPException(status_code=404, detail="Produit introuvable")
+    if dest.id == source.id:
+        raise HTTPException(status_code=400, detail="Impossible de fusionner un produit avec lui-même")
+
+    dest_store_ids = {pp.store_id for pp in dest.prices}
+
+    # Transfer prices not already in dest
+    for pp in list(source.prices):
+        if pp.store_id not in dest_store_ids:
+            pp.product_id = dest.id
+            dest_store_ids.add(pp.store_id)
+
+    # Transfer price history
+    for h in db.query(models.PriceHistory).filter_by(product_id=source.id).all():
+        h.product_id = dest.id
+
+    db.delete(source)
+    db.commit()
+    db.refresh(dest)
+    return _build_product_response(dest, db)
+
+
 @router.delete("/{product_id}", status_code=204)
 def delete_product(
     product_id: int,

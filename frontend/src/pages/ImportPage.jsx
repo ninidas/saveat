@@ -15,9 +15,16 @@ const STOP_WORDS = new Set([
 ])
 
 function normalizeName(raw) {
-  return raw
-    .replace(/\s+/g, ' ')
-    .trim()
+  let s = raw.replace(/\s+/g, ' ').trim()
+  // "AUC " prefix -> "Auchan "
+  s = s.replace(/^AUC\s+/i, 'Auchan ')
+  // Move leading quantity/weight to the end (e.g. "120g Fromage" -> "Fromage 120g")
+  s = s.replace(/^(\d+(?:[.,]\d+)?(?:x\d+)?(?:g|kg|ml|cl|l|L)?\b)\s+(.+)/i, '$2 $1')
+  // Move leading "bio" to the end (e.g. "BIO Yaourt" -> "Yaourt Bio")
+  s = s.replace(/^(bio)\s+(.+)/i, '$2 Bio')
+  // Normalize pack multiplier to lowercase (2X100G -> 2x100g, X6 -> x6)
+  s = s.replace(/\b(\d+)?[Xx](\d+(?:[.,]\d+)?(?:g|kg|ml|cl|l|L)?)\b/gi, (_, a, b) => (a ? `${a}x` : 'x') + b.toLowerCase())
+  return s
     .toLowerCase()
     .replace(/(?:^|\s)\S/g, c => c.toUpperCase())
 }

@@ -79,15 +79,17 @@ function PriceRow({ price, onEdit, onDelete }) {
   )
 }
 
-function ProductSheet({ product, stores, onClose, onSaved, onDeleted }) {
+function ProductSheet({ product, stores, products, onClose, onSaved, onDeleted }) {
   const [form, setForm]   = useState({
     name:     product?.name     || '',
     category: product?.category || '',
     unit:     product?.unit     || 'unité',
   })
-  const [priceEdit, setPriceEdit] = useState(null) // { store_id, price }
-  const [loading, setLoading]     = useState(false)
-  const [error, setError]         = useState('')
+  const [priceEdit, setPriceEdit]   = useState(null)
+  const [loading, setLoading]       = useState(false)
+  const [error, setError]           = useState('')
+  const [showMerge, setShowMerge]   = useState(false)
+  const [mergeSearch, setMergeSearch] = useState('')
   const isNew = !product
 
   async function saveProduct(e) {
@@ -99,6 +101,7 @@ function ProductSheet({ product, stores, onClose, onSaved, onDeleted }) {
         ? await api.createProduct(form)
         : await api.updateProduct(product.id, form)
       onSaved(saved)
+      if (!isNew) onClose()
     } catch (err) {
       setError(err.message)
     } finally {
@@ -251,16 +254,63 @@ function ProductSheet({ product, stores, onClose, onSaved, onDeleted }) {
 
       {/* Delete button */}
       {!isNew && (
-        <button
-          onClick={async () => {
-            if (!window.confirm('Supprimer ce produit ?')) return
-            await api.deleteProduct(product.id)
-            onDeleted(product.id)
-          }}
-          className="mt-4 w-full text-sm text-red-500 hover:text-red-700 py-2 transition"
-        >
-          Supprimer le produit
-        </button>
+        <div className="mt-4 space-y-2">
+          {!showMerge ? (
+            <button
+              onClick={() => { setShowMerge(true); setMergeSearch('') }}
+              className="w-full text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 py-2 transition border border-slate-200 dark:border-slate-700 rounded-xl"
+            >
+              Fusionner un doublon dans ce produit
+            </button>
+          ) : (
+            <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-3 space-y-2">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Choisir le doublon à absorber (il sera supprimé) :</p>
+              <input
+                className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:bg-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="Rechercher…"
+                value={mergeSearch}
+                onChange={e => setMergeSearch(e.target.value)}
+                autoFocus
+              />
+              <div className="max-h-40 overflow-y-auto space-y-1">
+                {products
+                  .filter(p => p.id !== product.id && p.name.toLowerCase().includes(mergeSearch.toLowerCase()))
+                  .slice(0, 8)
+                  .map(p => (
+                    <button
+                      key={p.id}
+                      onClick={async () => {
+                        if (!window.confirm(`Fusionner "${p.name}" dans "${product.name}" ? "${p.name}" sera supprimé.`)) return
+                        setLoading(true)
+                        try {
+                          const updated = await api.mergeProduct(product.id, p.id)
+                          onSaved(updated)
+                          setShowMerge(false)
+                        } catch (err) { setError(err.message) }
+                        finally { setLoading(false) }
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition"
+                    >
+                      {p.name}
+                    </button>
+                  ))}
+              </div>
+              <button onClick={() => setShowMerge(false)} className="text-xs text-slate-400 hover:text-slate-600 transition">
+                Annuler
+              </button>
+            </div>
+          )}
+          <button
+            onClick={async () => {
+              if (!window.confirm('Supprimer ce produit ?')) return
+              await api.deleteProduct(product.id)
+              onDeleted(product.id)
+            }}
+            className="w-full text-sm text-red-500 hover:text-red-700 py-2 transition"
+          >
+            Supprimer le produit
+          </button>
+        </div>
       )}
     </BottomSheet>
   )
@@ -423,6 +473,7 @@ export default function ProductsPage() {
         <ProductSheet
           product={null}
           stores={stores}
+          products={products}
           onClose={() => setSheet(null)}
           onSaved={saved => { setProducts(p => [saved, ...p]); setSheet(saved) }}
           onDeleted={handleDeleted}
@@ -432,6 +483,7 @@ export default function ProductsPage() {
         <ProductSheet
           product={sheet}
           stores={stores}
+          products={products}
           onClose={() => setSheet(null)}
           onSaved={handleSaved}
           onDeleted={handleDeleted}

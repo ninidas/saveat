@@ -86,6 +86,9 @@ export const api = {
                                  .then(r => { invalidate('products*') ; return r }),
   updateProduct:   (id, d)  => request(`/products/${id}`, { method: 'PATCH', body: JSON.stringify(d) })
                                  .then(r => { invalidate('products*') ; return r }),
+  mergeProduct:    (destId, sourceId) =>
+                               request(`/products/${destId}/merge`, { method: 'POST', body: JSON.stringify({ source_id: sourceId }) })
+                                 .then(r => { invalidate('products*') ; return r }),
   deleteProduct:   (id)     => request(`/products/${id}`, { method: 'DELETE' })
                                  .then(r => { invalidate('products*') ; return r }),
   upsertPrice:     (pid, sid, price) =>

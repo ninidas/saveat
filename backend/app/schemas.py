@@ -158,6 +158,12 @@ class ImportSessionResponse(BaseModel):
         from_attributes = True
 
 
+# Merge
+
+class MergeRequest(BaseModel):
+    source_id: int
+
+
 # Settings
 
 class SettingsUpdate(BaseModel):
