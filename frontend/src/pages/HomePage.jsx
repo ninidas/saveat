@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
-import { useCompare } from '../context/CompareContext'
 
 function formatDate(iso) {
   const d = new Date(iso)
@@ -12,39 +11,10 @@ function formatDate(iso) {
   return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
 }
 
-function round2(n) { return Math.round(n * 100) / 100 }
-
-function computeComparison(selection) {
-  // Extraire les enseignes qui ont au moins un prix parmi les produits sélectionnés
-  const storeMap = {}
-  for (const { product } of selection) {
-    for (const p of product.prices || []) {
-      if (!storeMap[p.store_id])
-        storeMap[p.store_id] = { id: p.store_id, name: p.store_name, color: p.store_color }
-    }
-  }
-  const stores = Object.values(storeMap)
-
-  return stores.map(store => {
-    let total = 0, missing = 0
-    for (const { product, qty } of selection) {
-      const p = product.prices?.find(pr => pr.store_id === store.id)
-      if (p) total += p.price * qty
-      else missing++
-    }
-    return { store, total: round2(total), missing }
-  }).sort((a, b) => {
-    if (a.missing !== b.missing) return a.missing - b.missing
-    return a.total - b.total
-  })
-}
-
 export default function HomePage() {
-  const [stats, setStats]   = useState(null)
+  const [stats, setStats]     = useState(null)
   const [loading, setLoading] = useState(true)
-  const { selection } = useCompare()
-  const navigate      = useNavigate()
-  const comparison    = useMemo(() => selection.length ? computeComparison(selection) : [], [selection])
+  const navigate              = useNavigate()
 
   useEffect(() => {
     api.getStats()
@@ -114,46 +84,44 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Comparaison en cours */}
-          {comparison.length > 0 && (
+          {/* Classement automatique des enseignes */}
+          {stats.store_ranking?.length > 0 && (
             <div
               className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden cursor-pointer hover:border-emerald-400 transition"
               onClick={() => navigate('/compare')}
             >
               <div className="px-4 pt-3 pb-1 flex items-center justify-between">
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                  Meilleure enseigne · {selection.length} produit{selection.length > 1 ? 's' : ''}
+                  Meilleure enseigne · {stats.store_ranking[0].product_count} produit{stats.store_ranking[0].product_count > 1 ? 's' : ''} comparés
                 </p>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-slate-400">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                 </svg>
               </div>
-              {comparison.map((row, i) => (
+              {stats.store_ranking.map((row, i) => (
                 <div
-                  key={row.store.id}
+                  key={row.store_name}
                   className={`flex items-center gap-3 px-4 py-3 border-t border-slate-100 dark:border-slate-800 ${
-                    i === 0 && row.missing < selection.length ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
+                    i === 0 ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''
                   }`}
                 >
-                  <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: row.store.color }} />
-                  <span className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-300">{row.store.name}</span>
+                  <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: row.store_color }} />
+                  <span className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-300">{row.store_name}</span>
                   {row.missing > 0 && (
                     <span className="text-xs text-amber-500">{row.missing} manquant{row.missing > 1 ? 's' : ''}</span>
                   )}
                   <span className={`font-bold text-sm ${
-                    i === 0 && row.missing < selection.length
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : 'text-slate-700 dark:text-slate-300'
+                    i === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'
                   }`}>
                     {row.total.toFixed(2)} €
                   </span>
-                  {i === 0 && row.missing < selection.length && <span>🏆</span>}
+                  {i === 0 && <span>🏆</span>}
                 </div>
               ))}
-              {comparison.length > 1 && comparison[0].missing < selection.length && comparison[1].missing < selection.length && (
+              {stats.store_ranking.length > 1 && stats.store_ranking[1].missing === 0 && (
                 <div className="px-4 py-2 bg-emerald-50 dark:bg-emerald-900/10 border-t border-emerald-100 dark:border-emerald-900/30">
                   <p className="text-xs text-emerald-700 dark:text-emerald-400">
-                    💰 Économie vs 2e : <strong>{(comparison[1].total - comparison[0].total).toFixed(2)} €</strong>
+                    💰 Économie vs 2e : <strong>{(stats.store_ranking[1].total - stats.store_ranking[0].total).toFixed(2)} €</strong>
                   </p>
                 </div>
               )}

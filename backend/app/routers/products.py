@@ -1,4 +1,5 @@
 from datetime import datetime
+from collections import defaultdict
 from itertools import groupby
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -60,6 +61,38 @@ def get_stats(
                 })
     increases.sort(key=lambda x: x["recorded_at"], reverse=True)
 
+    # Store ranking: based on products that have prices on 2+ stores
+    all_prices = (
+        db.query(models.ProductPrice, models.Store)
+        .join(models.Store, models.ProductPrice.store_id == models.Store.id)
+        .all()
+    )
+    product_prices_map = defaultdict(list)
+    for pp, store in all_prices:
+        product_prices_map[pp.product_id].append((pp, store))
+
+    multi_products = {pid: prices for pid, prices in product_prices_map.items() if len(prices) >= 2}
+    multi_count = len(multi_products)
+
+    store_agg = {}
+    for prices in multi_products.values():
+        for pp, store in prices:
+            if store.id not in store_agg:
+                store_agg[store.id] = {"store": store, "total": 0.0, "count": 0}
+            store_agg[store.id]["total"] += pp.price
+            store_agg[store.id]["count"] += 1
+
+    store_ranking = sorted([
+        {
+            "store_name":    data["store"].name,
+            "store_color":   data["store"].color,
+            "total":         round(data["total"], 2),
+            "missing":       multi_count - data["count"],
+            "product_count": data["count"],
+        }
+        for data in store_agg.values()
+    ], key=lambda x: (x["missing"], x["total"]))
+
     return {
         "total_products": total_products,
         "total_stores": total_stores,
@@ -75,6 +108,7 @@ def get_stats(
             for hist, product, store in recent
         ],
         "price_increases": increases,
+        "store_ranking":   store_ranking,
     }
 
 

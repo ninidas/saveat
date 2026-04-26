@@ -89,7 +89,15 @@ function ReceiptAnalyzer({ onClose, onImported }) {
     try {
       const res = await api.analyzeReceipt(file)
       setResult(res)
-      setRows(res.items.map(item => {
+      // Deduplicate items with same name and price (e.g. 2 units of the same product)
+      const seen = new Set()
+      const deduped = res.items.filter(item => {
+        const key = `${normalizeName(item.name)}|${item.price}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      setRows(deduped.map(item => {
         const cleanName   = normalizeName(item.name)
         const suggestions = findSuggestions(cleanName, products)
         const best        = suggestions[0]

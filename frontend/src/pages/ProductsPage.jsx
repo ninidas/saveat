@@ -270,6 +270,7 @@ export default function ProductsPage() {
   const [products, setProducts]   = useState([])
   const [stores, setStores]       = useState([])
   const [search, setSearch]       = useState('')
+  const [filterMulti, setFilterMulti] = useState(false)
   const [loading, setLoading]     = useState(true)
   const [sheet, setSheet]         = useState(null)  // null | 'new' | product
 
@@ -326,7 +327,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Search */}
-      <div className="px-4 py-3">
+      <div className="px-4 pt-3 pb-2 space-y-2">
         <div className="relative">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
             <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -338,6 +339,22 @@ export default function ProductsPage() {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setFilterMulti(f => !f)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+              filterMulti
+                ? 'bg-emerald-600 border-emerald-600 text-white'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-emerald-400'
+            }`}
+          >
+            <span className="flex gap-0.5">
+              <span className="w-2 h-2 rounded-full bg-current opacity-80" />
+              <span className="w-2 h-2 rounded-full bg-current opacity-50" />
+            </span>
+            Plusieurs enseignes
+          </button>
+        </div>
       </div>
 
       {/* List */}
@@ -345,17 +362,18 @@ export default function ProductsPage() {
         <div className="flex justify-center py-12">
           <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
         </div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-16 px-4">
-          <div className="text-5xl mb-3">📦</div>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Aucun produit</p>
-          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
-            {search ? 'Aucun résultat pour cette recherche' : 'Ajoutez votre premier produit'}
-          </p>
-        </div>
       ) : (
         <div className="px-4 space-y-2 pb-4">
-          {products.map(product => (
+          {products.filter(p => !filterMulti || p.prices?.length >= 2).length === 0 ? (
+            <div className="text-center py-16 px-4">
+              <div className="text-5xl mb-3">📦</div>
+              <p className="text-slate-500 dark:text-slate-400 font-medium">Aucun produit</p>
+              <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
+                {search ? 'Aucun résultat pour cette recherche' : filterMulti ? 'Aucun produit sur plusieurs enseignes' : 'Ajoutez votre premier produit'}
+              </p>
+            </div>
+          ) : null}
+          {products.filter(p => !filterMulti || p.prices?.length >= 2).map(product => (
             <button
               key={product.id}
               onClick={() => setSheet(product)}
@@ -397,7 +415,8 @@ export default function ProductsPage() {
             </button>
           ))}
         </div>
-      )}
+      )
+      }
 
       {/* Sheets */}
       {sheet === 'new' && (
