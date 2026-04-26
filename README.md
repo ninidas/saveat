@@ -1,5 +1,9 @@
 # Saveat
 
+<p align="center">
+  <img src="frontend/public/logo.png" alt="Saveat" width="120" style="border-radius:24px" />
+</p>
+
 Self-hosted web app to compare grocery prices across supermarkets.
 
 Grocery prices vary significantly from one store to another, and they change over time. Saveat lets you build a personal price catalog by importing your receipts, then instantly compare the total cost of your usual basket across all your stores. No subscription, no ads, no data sent anywhere. Just your prices, on your server.
@@ -23,8 +27,9 @@ Scan a receipt or a PDF invoice with Claude AI, review the detected products, an
 
 ### Dashboard
 - **Home overview** total products, stores, and products missing a price
-- **Best store widget** shows the cheapest store for your current comparison selection
+- **Best store widget** automatically ranks stores by total basket cost, with configurable store selection
 - **Recent prices** last prices recorded across all stores
+- **Price increase alerts** highlights recent price rises per product and store
 
 ### App
 - **Dark mode** full dark theme support
@@ -39,18 +44,10 @@ Scan a receipt or a PDF invoice with Claude AI, review the detected products, an
 
 ### 1. Create a `docker-compose.yml`
 
-A `docker-compose.example.yml` is provided as a starting point:
-
-```bash
-cp docker-compose.example.yml docker-compose.yml
-```
-
-Edit the volume path to point to your data folder:
-
 ```yaml
 services:
   saveat:
-    image: saveat:latest
+    image: ghcr.io/ninidas/saveat:latest
     container_name: saveat
     restart: unless-stopped
     ports:
@@ -62,7 +59,7 @@ services:
       - /path/to/saveat/data:/data
 ```
 
-Then start with `docker compose up -d`. The app is available at `http://localhost:8000`.
+Start with `docker compose up -d`.
 
 ### 2. First run
 
