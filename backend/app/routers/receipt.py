@@ -74,9 +74,10 @@ async def analyze_receipt(
                                 "Analyse ce ticket de caisse et extrais la liste des produits alimentaires "
                                 "avec leur prix unitaire. Réponds UNIQUEMENT avec un JSON valide ayant ce format :\n"
                                 '{"store_name": "Nom du magasin ou null", "items": [{"name": "Nom du produit", "price": 1.99, "unit": "unité"}]}\n'
-                                "- 'price' est le prix unitaire en euros (nombre décimal)\n"
+                                "- 'price' est le montant total payé pour cet article (la somme débitée), jamais le prix au kg ou au litre\n"
+                                "- Par exemple pour '1 x 8.83  0.476kg x 18.55€/kg', le price est 8.83 (pas 18.55)\n"
                                 "- 'unit' est parmi : kg, L, unité, 100g, cl\n"
-                                "- N'inclure que les produits alimentaires\n"
+                                "- Inclure tous les produits (alimentaires, hygiène, entretien, etc.)\n"
                                 "- Si un prix n'est pas lisible, ne pas inclure le produit\n"
                                 "Réponds uniquement avec le JSON, sans texte autour."
                             ),

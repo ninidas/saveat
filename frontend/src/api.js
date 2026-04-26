@@ -97,7 +97,10 @@ export const api = {
   deletePrice:     (pid, sid) => request(`/products/${pid}/prices/${sid}`, { method: 'DELETE' })
                                  .then(r => { invalidate('products*') ; return r }),
   getCategories:   ()       => cached('categories', () => request('/products/categories/list')),
-  getStats:        ()       => request('/products/stats'),
+  getStats:        (storeIds) => {
+    const qs = storeIds?.length ? '?' + storeIds.map(id => `store_ids=${id}`).join('&') : ''
+    return request(`/products/stats${qs}`)
+  },
 
   // Import sessions
   getImportSessions:    ()     => request('/imports'),

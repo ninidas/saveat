@@ -69,8 +69,7 @@ export default function Layout({ children }) {
       {/* Sidebar desktop ───────────────────────────────── */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-gradient-to-b from-emerald-600 to-teal-700 shadow-xl">
         <div className="pt-8 pb-4 px-4 border-b border-white/10 flex flex-col items-center">
-          <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl mb-3">🛒</div>
-          <p className="text-white font-bold text-xl">Saveat</p>
+          <img src="/logo.png" alt="Saveat" className="w-24 mb-2 rounded-2xl" />
           <p className="text-emerald-100 text-xs mt-1">{user?.username}</p>
         </div>
 

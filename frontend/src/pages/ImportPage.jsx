@@ -20,6 +20,8 @@ function normalizeName(raw) {
   s = s.replace(/^AUC\s+/i, 'Auchan ')
   // Move leading quantity/weight to the end (e.g. "120g Fromage" -> "Fromage 120g")
   s = s.replace(/^(\d+(?:[.,]\d+)?(?:x\d+)?(?:g|kg|ml|cl|l|L)?\b)\s+(.+)/i, '$2 $1')
+  // Move leading pack count to the end (e.g. "X15 Produit" -> "Produit x15")
+  s = s.replace(/^[Xx](\d+)\s+(.+)/i, '$2 x$1')
   // Move leading "bio" to the end (e.g. "BIO Yaourt" -> "Yaourt Bio")
   s = s.replace(/^(bio)\s+(.+)/i, '$2 Bio')
   // Normalize pack multiplier to lowercase (2X100G -> 2x100g, X6 -> x6)
@@ -43,10 +45,68 @@ function similarity(a, b) {
   return hasExact ? score : score * 0.7
 }
 
+const CATEGORY_KEYWORDS = {
+  'Fruits & Légumes': [
+    'tomate', 'salade', 'laitue', 'courgette', 'aubergine', 'carotte', 'poireau',
+    'oignon', 'ail', 'pomme', 'banane', 'orange', 'citron', 'fraise', 'framboise',
+    'avocat', 'concombre', 'potimarron', 'patate', 'fruit', 'legume', 'ciboulette',
+    'origan', 'persil', 'basilic', 'menthe', 'herbe', 'radis', 'brocoli', 'epinard',
+    'poivron', 'champignon', 'mangue', 'ananas', 'raisin', 'cerise', 'peche', 'abricot',
+  ],
+  'Viandes & Poissons': [
+    'poulet', 'boeuf', 'veau', 'porc', 'agneau', 'saumon', 'thon', 'colin', 'cabillaud',
+    'crevette', 'merguez', 'jambon', 'steak', 'hache', 'filet', 'pavé', 'cordon',
+    'blanc', 'escalope', 'nugget', 'lardon', 'bacon', 'saucisse', 'boudin',
+    'truite', 'sardine', 'maquereau', 'calamar',
+  ],
+  'Crèmerie': [
+    'yaourt', 'yoplait', 'skyr', 'fromage', 'emmental', 'cheddar', 'gouda', 'brie',
+    'camembert', 'lait', 'beurre', 'creme', 'mozzarella', 'parmesan', 'parmigiano',
+    'cottage', 'margarine', 'oeuf', 'ricotta', 'feta', 'comté',
+  ],
+  'Épicerie': [
+    'pate', 'riz', 'farine', 'sucre', 'sel', 'huile', 'vinaigre', 'sauce', 'coulis',
+    'moutarde', 'mayonnaise', 'ketchup', 'conserve', 'ravioli', 'tortellini',
+    'couscous', 'soupe', 'pizza', 'wrap', 'chips', 'biscotte', 'chocolat',
+    'confiture', 'miel', 'cafe', 'the', 'levure', 'bouillon', 'houmous',
+    'cookie', 'gateau', 'brownie', 'biscuit', 'cereale', 'granola', 'compote',
+    'sardine', 'thon', 'haricot', 'lentille', 'pois',
+  ],
+  'Traiteur': [
+    'houmous', 'taboulé', 'tzatziki', 'guacamole', 'rillette', 'terrine', 'pâté',
+    'salade preparee', 'traiteur', 'surimi', 'tarama', 'caviar', 'tzatziki',
+    'jambon', 'saucisson', 'chorizo', 'salami', 'mortadelle', 'coppa',
+    'quiche', 'gratin', 'lasagne', 'hachis', 'brandade',
+  ],
+  'Boissons': [
+    'eau', 'jus', 'limonade', 'soda', 'biere', 'vin', 'sirop', 'smoothie',
+    'boisson', 'infusion', 'kombucha',
+  ],
+  'Boulangerie': [
+    'pain', 'brioche', 'baguette', 'croissant', 'viennoiserie', 'mie', 'toast',
+    'biscottes',
+  ],
+  'Surgelés': [
+    'surgele', 'glace', 'frites', 'noisette', 'findus', 'picard', 'batonnets',
+  ],
+  'Hygiène': [
+    'savon', 'shampoing', 'gel douche', 'dentifrice', 'deodorant', 'rasoir',
+    'coton', 'kleenex', 'papier', 'essuie', 'dove', 'lessive', 'liquide vaisselle',
+  ],
+}
+
+function guessCategory(name) {
+  const lower = name.toLowerCase().replace(/[^a-z\s]/g, ' ')
+  for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (keywords.some(kw => lower.includes(kw))) return category
+  }
+  return null
+}
+
 function findSuggestions(name, products) {
   return products
     .map(p => ({ product: p, score: similarity(name, p.name) }))
-    .filter(x => x.score >= 0.3)
+    .filter(x => x.score >= 0.5)
     .sort((a, b) => b.score - a.score)
     .slice(0, 5)
 }
@@ -99,7 +159,7 @@ function ReceiptAnalyzer({ onClose, onImported }) {
       // Deduplicate items with same name and price (e.g. 2 units of the same product)
       const seen = new Set()
       const deduped = res.items.filter(item => {
-        const key = `${normalizeName(item.name)}|${item.price}`
+        const key = normalizeName(item.name)
         if (seen.has(key)) return false
         seen.add(key)
         return true
@@ -108,7 +168,7 @@ function ReceiptAnalyzer({ onClose, onImported }) {
         const cleanName   = normalizeName(item.name)
         const suggestions = findSuggestions(cleanName, products)
         const best        = suggestions[0]
-        return { checked: true, name: cleanName, price: item.price, unit: item.unit, linkedProductId: best?.product.id ?? null }
+        return { checked: true, name: cleanName, price: item.price, unit: item.unit, linkedProductId: best?.product.id ?? null, category: guessCategory(cleanName) }
       }))
       if (res.store_name && stores.length) {
         const detected = res.store_name.toLowerCase()
@@ -136,7 +196,7 @@ function ReceiptAnalyzer({ onClose, onImported }) {
       for (const row of toImport) {
         let productId = row.linkedProductId
         if (!productId) {
-          const created = await api.createProduct({ name: row.name.trim(), unit: row.unit || 'unité' })
+          const created = await api.createProduct({ name: row.name.trim(), unit: row.unit || 'unité', category: row.category || null })
           productId = created.id
         }
         await api.upsertPrice(productId, parseInt(selectedStoreId), row.price)

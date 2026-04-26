@@ -1,7 +1,7 @@
 from datetime import datetime
 from collections import defaultdict
 from itertools import groupby
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -13,6 +13,7 @@ router = APIRouter(prefix="/products", tags=["products"])
 
 @router.get("/stats")
 def get_stats(
+    store_ids: list[int] | None = Query(default=None),
     db: Session = Depends(get_db),
     _: models.User = Depends(get_current_user),
 ):
@@ -62,17 +63,24 @@ def get_stats(
     increases.sort(key=lambda x: x["recorded_at"], reverse=True)
 
     # Store ranking: based on products that have prices on 2+ stores
-    all_prices = (
+    prices_q = (
         db.query(models.ProductPrice, models.Store)
         .join(models.Store, models.ProductPrice.store_id == models.Store.id)
-        .all()
     )
+    if store_ids:
+        prices_q = prices_q.filter(models.ProductPrice.store_id.in_(store_ids))
+    all_prices = prices_q.all()
     product_prices_map = defaultdict(list)
     for pp, store in all_prices:
         product_prices_map[pp.product_id].append((pp, store))
 
     multi_products = {pid: prices for pid, prices in product_prices_map.items() if len(prices) >= 2}
     multi_count = len(multi_products)
+
+    compared_products = []
+    if multi_products:
+        prod_rows = db.query(models.Product).filter(models.Product.id.in_(list(multi_products.keys()))).all()
+        compared_products = sorted([{"id": p.id, "name": p.name} for p in prod_rows], key=lambda x: x["name"])
 
     store_agg = {}
     for prices in multi_products.values():
@@ -107,8 +115,9 @@ def get_stats(
             }
             for hist, product, store in recent
         ],
-        "price_increases": increases,
-        "store_ranking":   store_ranking,
+        "price_increases":    increases,
+        "store_ranking":      store_ranking,
+        "compared_products":  compared_products,
     }
 
 
