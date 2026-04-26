@@ -323,6 +323,7 @@ export default function ProductsPage() {
   const [search, setSearch]       = useState('')
   const [filterMulti, setFilterMulti] = useState(false)
   const [filterCategory, setFilterCategory] = useState(null)
+  const [filterNoGrammage, setFilterNoGrammage] = useState(false)
   const [quickEdit, setQuickEdit] = useState(false)
   const [loading, setLoading]     = useState(true)
   const [sheet, setSheet]         = useState(null)  // null | 'new' | product
@@ -427,6 +428,16 @@ export default function ProductsPage() {
           >
             📦 Sans catégorie
           </button>
+          <button
+            onClick={() => setFilterNoGrammage(f => !f)}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition flex-shrink-0 ${
+              filterNoGrammage
+                ? 'bg-emerald-600 border-emerald-600 text-white'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-emerald-400'
+            }`}
+          >
+            ⚖️ Sans grammage
+          </button>
           {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => (
             <button
               key={cat}
@@ -450,16 +461,25 @@ export default function ProductsPage() {
         </div>
       ) : (
         <div className="px-4 space-y-2 pb-4">
-          {products.filter(p => (!filterMulti || p.prices?.length >= 2) && (filterCategory === null || (filterCategory === '' ? !p.category : p.category === filterCategory))).length === 0 ? (
-            <div className="text-center py-16 px-4">
-              <div className="text-5xl mb-3">📦</div>
-              <p className="text-slate-500 dark:text-slate-400 font-medium">Aucun produit</p>
-              <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
-                {search ? 'Aucun résultat pour cette recherche' : filterMulti ? 'Aucun produit sur plusieurs enseignes' : 'Ajoutez votre premier produit'}
-              </p>
-            </div>
-          ) : null}
-          {products.filter(p => (!filterMulti || p.prices?.length >= 2) && (filterCategory === null || (filterCategory === '' ? !p.category : p.category === filterCategory))).map(product => (
+          {(() => {
+            const HAS_GRAMMAGE = /\d+\s*(?:g|kg|ml|cl|l)\b|x\d+/i
+            const filtered = products.filter(p =>
+              (!filterMulti || p.prices?.length >= 2) &&
+              (filterCategory === null || (filterCategory === '' ? !p.category : p.category === filterCategory)) &&
+              (!filterNoGrammage || !HAS_GRAMMAGE.test(p.name))
+            )
+            return (
+              <>
+                {filtered.length === 0 && (
+                  <div className="text-center py-16 px-4">
+                    <div className="text-5xl mb-3">📦</div>
+                    <p className="text-slate-500 dark:text-slate-400 font-medium">Aucun produit</p>
+                    <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
+                      {search ? 'Aucun résultat pour cette recherche' : filterMulti ? 'Aucun produit sur plusieurs enseignes' : 'Ajoutez votre premier produit'}
+                    </p>
+                  </div>
+                )}
+                {filtered.map(product => (
             quickEdit ? (
               <div key={product.id} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-2 flex items-center gap-3">
                 <span className="text-lg w-7 text-center flex-shrink-0">{CATEGORY_ICONS[product.category] || '📦'}</span>
@@ -519,7 +539,10 @@ export default function ProductsPage() {
                 </div>
               </button>
             )
-          ))}
+                ))}
+              </>
+            )
+          })()}
         </div>
       )
       }
